@@ -58,6 +58,8 @@ class CoreTests(unittest.TestCase):
         _, st_t4, txt_t4, _ = evaluate_vram(14.0, 4096, gpu_type="T4", lang="en")
         _, st_l4, txt_l4, _ = evaluate_vram(14.0, 4096, gpu_type="L4", lang="en")
         _, st_a100, _, _ = evaluate_vram(14.0, 4096, gpu_type="A100", lang="en")
+        _, st_h100, txt_h100, _ = evaluate_vram(66.0, 4096, gpu_type="H100", lang="en")
+        _, st_g4, txt_g4, _ = evaluate_vram(66.0, 4096, gpu_type="G4", lang="en")
         _, st_cpu, txt_cpu, _ = evaluate_vram(4.5, 4096, gpu_type="CPU", lang="en")
 
         self.assertEqual(st_t4, "overload")
@@ -65,6 +67,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(st_l4, "safe")
         self.assertIn("22.50 GB", txt_l4)
         self.assertEqual(st_a100, "safe")
+        self.assertEqual(st_h100, "tight")
+        self.assertIn("80.00 GB", txt_h100)
+        self.assertEqual(st_g4, "safe")
+        self.assertIn("96.00 GB", txt_g4)
         self.assertEqual(st_cpu, "safe")
         self.assertIn("CPU Mode", txt_cpu)
 
@@ -117,11 +123,49 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(named, ["colab-llm-server"])
         self.assertEqual(orphans, ["gpu-t4-s-orphan99"])
 
+    def test_pro_plus_gpu_flags_and_entitlement_detection(self) -> None:
+        from unittest.mock import patch
+        import io
+        import colab_orchestrator as co
+
+        orch = co.ColabOrchestrator()
+        captured_cmds = []
+
+        class FakeProc:
+            def __init__(self, rc: int, out: bytes):
+                self.returncode = rc
+                self.stdout = io.BytesIO(out)
+
+            def poll(self):
+                return self.returncode
+
+        def fake_popen(cmd, **kwargs):
+            captured_cmds.append(cmd)
+            return FakeProc(
+                1,
+                b"[colab] Backend rejected accelerator 'H100'. You may not have quota or entitlement.\n",
+            )
+
+        with patch.object(orch, "list_session_details", return_value=([], [])):
+            with patch("colab_orchestrator.subprocess.Popen", side_effect=fake_popen):
+                ok = orch.ensure_session("s1", gpu_type="H100", high_mem=True)
+                self.assertFalse(ok)
+                self.assertEqual(orch.last_error_code, "400_entitlement")
+                self.assertIn("--gpu", captured_cmds[-1])
+                self.assertIn("H100", captured_cmds[-1])
+                self.assertIn("--high-mem", captured_cmds[-1])
+
+                # L4 ignores --high-mem
+                orch.ensure_session("s1", gpu_type="L4", high_mem=True)
+                self.assertIn("L4", captured_cmds[-1])
+                self.assertNotIn("--high-mem", captured_cmds[-1])
+
     def test_gui_bilingual_and_edge_cases(self) -> None:
         from PySide6.QtTest import QTest
         from PySide6.QtWidgets import QApplication
         from config_manager import config_mgr
         from gui.main_window import MainWindow
+        from gui.settings_dialog import SettingsDialog
         from gui.theme import setup_theme
         from hf_explorer import QuantFileInfo
 
@@ -142,6 +186,7 @@ class CoreTests(unittest.TestCase):
         # Valid quant load + language toggle
         orig_lang = config_mgr.config.language
         orig_port = config_mgr.config.api_port
+        orig_gpu = config_mgr.config.colab_gpu
         try:
             q_dummy = QuantFileInfo("dummy.gguf", 100, 4.0, "Q4_K_M", 6.9, "safe", "ok", "#10b981")
             win.on_quants_loaded(5, [q_dummy])
@@ -149,9 +194,17 @@ class CoreTests(unittest.TestCase):
 
             config_mgr.config.language = "en"
             config_mgr.config.api_port = 19999
+            config_mgr.config.colab_gpu = "G4"
             win.retranslate_ui()
             self.assertEqual(win.btn_tab_outgoing.text(), "Chat Playground")
             self.assertIn("19999", win.chat_widget.status_lbl.text())
+            self.assertIn("G4", win.gpu_text_lbl.text())
+            self.assertIn("96 GB", win.gpu_vram_lbl.text())
+
+            dlg = SettingsDialog(win)
+            gpu_codes = [dlg.gpu_combo.itemData(i) for i in range(dlg.gpu_combo.count())]
+            self.assertEqual(gpu_codes, ["T4", "L4", "A100", "H100", "G4", "CPU"])
+            dlg.close()
 
             win.switch_tab("chat")
             app.processEvents()
@@ -170,6 +223,7 @@ class CoreTests(unittest.TestCase):
         finally:
             config_mgr.config.language = orig_lang
             config_mgr.config.api_port = orig_port
+            config_mgr.config.colab_gpu = orig_gpu
             win.retranslate_ui()
             win.close()
 

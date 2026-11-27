@@ -2,7 +2,7 @@
 
 # Colab Model Hub & Gateway - 桌面直连大模型工作台
 
-基于 **Google Colab GPU (T4 / L4 / A100)** 算力与官方 **`llama-server` 原生 CUDA 推理引擎** 打造的**一体化大模型桌面客户端 (PySide6)** 与 **OpenAI 兼容本地网关**。
+基于 **Google Colab GPU (T4 / L4 / A100 / H100 / G4)** 算力与官方 **`llama-server` 原生 CUDA 推理引擎** 打造的**一体化大模型桌面客户端 (PySide6)** 与 **OpenAI 兼容本地网关**。
 
 通过内置的 `google-colab-cli` 加密 WebSocket-SSH 隧道，实现本地计算机与云端 GPU 的**点对点直连**：**0 第三方中转服务器、0 公网 IP 暴露、0 凭证硬编码、0 容器转发损耗**。
 
@@ -20,7 +20,7 @@
 2. **Hugging Face GGUF 模型检索与多卡显存动态评估**：
    - 内置精选列表与 Hugging Face GGUF 实时搜索、品牌胶囊筛选（Qwen / DeepSeek / Llama / Gemma）；
    - 自动过滤 `mmproj` 辅助权重并识别单文件与多片分片模型，按 `Q4_K_M` 优先排序；
-   - 支持 **T4 (15 GB) / L4 (22.5 GB) / A100 (40 GB) / CPU** 硬件切换与 2K~32K 上下文 KV Cache 动态显存预估。
+   - 支持 **T4 (15 GB) / L4 (22.5 GB) / A100 (40 GB) / H100 (80 GB) / G4 (96 GB) / CPU** 硬件切换（含 Pro/Pro+ 高内存 `--high-mem`）与 2K~32K 上下文 KV Cache 动态显存预估。
 
 3. **官方 `llama-server` CUDA 原生推理 + 双阶段 GPU 预热**：
    - 云端自动拉取预编译 CUDA 版 `llama-server`（可在设置中自定义 Release Tag），显存全量卸载（`-ngl 999`）；

@@ -2,7 +2,7 @@
 
 # Colab Model Hub & Gateway — Desktop LLM Workbench for Google Colab
 
-A **PySide6 desktop workstation** and **OpenAI-compatible local gateway** powered by **Google Colab GPUs (T4 / L4 / A100)** and the official native CUDA **`llama-server`** runtime.
+A **PySide6 desktop workstation** and **OpenAI-compatible local gateway** powered by **Google Colab GPUs (T4 / L4 / A100 / H100 / G4)** and the official native CUDA **`llama-server`** runtime.
 
 Using an encrypted WebSocket-SSH tunnel (`google-colab-cli`), it bridges your desktop directly to a Colab GPU container with **zero relay servers, zero public IP exposure, zero hardcoded credentials, and zero wrapper overhead**.
 
@@ -20,7 +20,7 @@ Using an encrypted WebSocket-SSH tunnel (`google-colab-cli`), it bridges your de
 2. **Hugging Face GGUF Explorer & Dynamic Multi-GPU VRAM Estimator**:
    - Featured presets, live GGUF repository search, and brand filter capsules (`Qwen` / `DeepSeek` / `Llama` / `Gemma`);
    - Filters out auxiliary `mmproj` weights, merges sharded GGUF sets, and ranks standard quants (`Q4_K_M` first);
-   - Evaluates weight + KV Cache VRAM across **T4 (15 GB) / L4 (22.5 GB) / A100 (40 GB) / CPU** and 2K–32K context sizes.
+   - Evaluates weight + KV Cache VRAM across **T4 (15 GB) / L4 (22.5 GB) / A100 (40 GB) / H100 (80 GB) / G4 (96 GB) / CPU** (plus `--high-mem` support for Pro/Pro+) and 2K–32K context sizes.
 
 3. **Native `llama-server` CUDA + Two-Phase GPU Warmup**:
    - Downloads official prebuilt CUDA `llama-server` (configurable release tag in Settings) with full GPU offload (`-ngl 999`);

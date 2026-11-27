@@ -102,6 +102,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "settings_port": "本地监听端口:",
         "settings_session": "Colab 会话名称:",
         "settings_gpu": "GPU 硬件规格:",
+        "settings_high_mem": "申请高内存机型 (--high-mem，需 Pro/Pro+，L4 自动忽略)",
         "settings_llama_tag": "llama.cpp 版本 Tag:",
         "settings_hf_token": "HuggingFace Token:",
         "settings_hf_ph": "可选，访问受控模型时填入 (hf_...)",
@@ -127,6 +128,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "auth_fail": "授权失败: {err}",
         "env_missing_ssh": "未检测到 OpenSSH 客户端（ssh / ssh-keygen），请在 Windows 可选功能中安装 OpenSSH Client。",
         "env_missing_auth": "尚未完成 Google Colab 账号授权，点击右上角【授权 Google 账号】即可一键完成登录。",
+        "err_gpu_entitlement": "当前 Google 账号暂无 {gpu} 算力权限或额度，请在右上角设置中切换为 T4 或升级 Colab Pro/Pro+。",
     },
     "en": {
         "app_title": "Colab Model Hub",
@@ -223,6 +225,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "settings_port": "Local Listen Port:",
         "settings_session": "Colab Session Name:",
         "settings_gpu": "Accelerator Tier:",
+        "settings_high_mem": "Request High-RAM VM (--high-mem, Pro/Pro+ only, ignored on L4)",
         "settings_llama_tag": "llama.cpp Release Tag:",
         "settings_hf_token": "HuggingFace Token:",
         "settings_hf_ph": "Optional token for gated repos (hf_...)",
@@ -248,6 +251,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "auth_fail": "Sign-in failed: {err}",
         "env_missing_ssh": "OpenSSH Client (ssh / ssh-keygen) not found on PATH. Please enable OpenSSH Client in Windows Optional Features.",
         "env_missing_auth": "Google Colab credentials not found. Click [Sign in to Colab] in the top bar to authorize.",
+        "err_gpu_entitlement": "Your Google account does not have quota/entitlement for {gpu}. Switch to T4 in Settings or upgrade to Colab Pro/Pro+.",
     },
 }
 
