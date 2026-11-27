@@ -29,7 +29,7 @@ USER_DATA_DIR = Path.home() / ".colab_launcher"
 LOG_FILE_PATH = USER_DATA_DIR / "app.log"
 DEFAULT_KEY_DIR = APP_DIR / "秘钥"
 DEFAULT_KEY_PATH = DEFAULT_KEY_DIR / "colab_tunnel_ed25519"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 
 GPU_VRAM_MAP: dict[str, float] = {
     "T4": 15.0,
