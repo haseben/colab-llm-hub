@@ -1,0 +1,25 @@
+name: Bug Report
+description: 报告程序错误或异常 / Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述 / Description
+      description: 清晰描述遇到的问题及复现步骤 / Clear description & steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: os_version
+    attributes:
+      label: 操作系统与运行方式 / OS & Launch Mode
+      placeholder: "e.g. Windows 11 / ColabModelHub.exe v1.0.0 or run_dev.bat"
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 脱敏后的执行日志 / Sanitized Logs
+      description: 可通过设置页或日志栏【导出日志】获取（请勿包含个人 API Key 或密钥）
+      render: text
