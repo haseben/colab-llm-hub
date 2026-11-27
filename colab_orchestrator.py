@@ -59,9 +59,11 @@ gpu_res = subprocess.run(
     capture_output=True,
     text=True,
 )
-if gpu_res.returncode == 0:
+if gpu_res.returncode == 0 and gpu_res.stdout.strip():
+    has_gpu = True
     print(f"    GPU 检测成功: {gpu_res.stdout.strip()}", flush=True)
 else:
+    has_gpu = False
     print("    [警告] 未检测到 GPU，将在 CPU 模式下运行。", flush=True)
 
 # 2. 清理旧服务
@@ -192,7 +194,7 @@ model_size_gb = round(total_bytes / (1024**3), 2)
 print(f"    模型文件全部分片就绪: {target_model_path} (合计 {model_size_gb} GB)", flush=True)
 
 # 5. 启动 llama-server 原生高性能服务
-print(">>> [5/5] 启动 llama-server (端口 8000, 显存全量卸载)...", flush=True)
+print(f">>> [5/5] 启动 llama-server (端口 8000, {'显存全量卸载' if has_gpu else 'CPU 推理模式'})...", flush=True)
 cmd = [
     str(llama_server_bin),
     "--model", str(target_model_path.resolve()),
@@ -202,7 +204,7 @@ cmd = [
     "-t", "4",
     "--host", "0.0.0.0",
     "--port", "8000",
-    "-ngl", "999",
+    "-ngl", "999" if has_gpu else "0",
     "--metrics",
 ]
 if API_KEY:
@@ -494,6 +496,7 @@ class ColabOrchestrator:
         self,
         session_name: str,
         gpu_type: str = "T4",
+        high_mem: bool = False,
         log_callback: Callable[[str], None] | None = None,
     ) -> bool:
         """Ensure the specified Colab session is created and running with GPU."""
@@ -514,10 +517,13 @@ class ColabOrchestrator:
             self.last_orphan_endpoints = orphans
             log(f"提示: 检测到云端存在未命名的孤立算力实例: {', '.join(orphans)}")
 
-        log(f"正在申请并创建 Colab 会话 '{session_name}' (GPU: {gpu_type})...")
+        log(f"正在申请并创建 Colab 会话 '{session_name}' (GPU: {gpu_type}{', High-RAM' if high_mem else ''})...")
         cmd = self._colab_base + ["--logtostderr", "new", "-s", session_name]
-        if gpu_type and gpu_type.upper() != "CPU":
-            cmd.extend(["--gpu", gpu_type.upper()])
+        gpu_upper = str(gpu_type or "T4").upper()
+        if gpu_upper != "CPU":
+            cmd.extend(["--gpu", gpu_upper])
+        if high_mem and gpu_upper != "L4":
+            cmd.append("--high-mem")
 
         process = subprocess.Popen(
             cmd,
@@ -579,6 +585,8 @@ class ColabOrchestrator:
             _, orphans_now = self.list_session_details()
             if orphans_now:
                 self.last_orphan_endpoints = orphans_now
+        elif "Backend rejected accelerator" in tail_msg or "entitlement" in tail_msg.lower():
+            self.last_error_code = "400_entitlement"
         log(f"创建会话失败 (exit={process.returncode}): {tail_msg or '未知错误'}")
         return False
 

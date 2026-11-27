@@ -959,7 +959,13 @@ class MainWindow(QMainWindow):
             self.gpu_text_lbl.setText("COLAB CPU")
             self.gpu_vram_lbl.setText(tr("gpu_badge_cpu"))
         else:
-            name_map = {"T4": "TESLA T4", "L4": "NVIDIA L4", "A100": "NVIDIA A100"}
+            name_map = {
+                "T4": "TESLA T4",
+                "L4": "NVIDIA L4",
+                "A100": "NVIDIA A100",
+                "H100": "NVIDIA H100",
+                "G4": "NVIDIA G4 (RTX 6000)",
+            }
             self.gpu_text_lbl.setText(name_map.get(gpu, f"GPU {gpu}"))
             vram_str = f"{limit:g}"
             self.gpu_vram_lbl.setText(tr("gpu_badge_vram", vram=vram_str))
@@ -1287,10 +1293,13 @@ class MainWindow(QMainWindow):
                 log(f"🚀 【阶段 1/3】检查并分配 Colab 算力实例 ({cfg.colab_gpu} GPU)")
                 log("=" * 65)
                 if not colab_orchestrator.ensure_session(
-                    cfg.colab_session, cfg.colab_gpu, log_callback=log
+                    cfg.colab_session, cfg.colab_gpu, high_mem=cfg.high_mem, log_callback=log
                 ):
                     if colab_orchestrator.last_error_code == "412" and colab_orchestrator.last_orphan_endpoints:
                         self._deploy_bridge.orphan_detected.emit(list(colab_orchestrator.last_orphan_endpoints))
+                    elif colab_orchestrator.last_error_code == "400_entitlement":
+                        self._deploy_bridge.finished.emit(False, tr("err_gpu_entitlement", gpu=cfg.colab_gpu))
+                        return
                     self._deploy_bridge.finished.emit(False, "无法分配 Colab 会话，请检查 Google 账号 GPU 额度或残留实例")
                     return
 

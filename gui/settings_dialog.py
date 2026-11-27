@@ -111,10 +111,22 @@ class SettingsDialog(QDialog):
         self.session_edit.setStyleSheet(f"{MONO_FONT} font-size: 11px;")
         self.form.addRow(tr("settings_session", self._lang), self.session_edit)
 
-        # GPU Type
+        # GPU Type (Free + Pro + Pro+ tiers)
         self.gpu_combo = ComboBox(self)
-        self.gpu_combo.addItems(["T4", "L4", "A100", "CPU"])
+        for label, code in [
+            ("T4 (15 GB · Free / Pro)", "T4"),
+            ("L4 (22.5 GB · Pro / Pro+)", "L4"),
+            ("A100 (40 GB · Pro / Pro+)", "A100"),
+            ("H100 (80 GB · Pro+)", "H100"),
+            ("G4 / RTX Pro 6000 (96 GB · Pro+)", "G4"),
+            ("CPU (No GPU)", "CPU"),
+        ]:
+            self.gpu_combo.addItem(label, userData=code)
         self.form.addRow(tr("settings_gpu", self._lang), self.gpu_combo)
+
+        # High-RAM VM option
+        self.high_mem_check = CheckBox(tr("settings_high_mem", self._lang), self)
+        self.form.addRow("", self.high_mem_check)
 
         # llama.cpp Release Tag
         self.llama_tag_edit = LineEdit(self)
@@ -229,7 +241,10 @@ class SettingsDialog(QDialog):
         self.key_edit.setText(cfg.api_key)
         self.port_spin.setValue(cfg.api_port)
         self.session_edit.setText(cfg.colab_session)
-        self.gpu_combo.setCurrentText(cfg.colab_gpu)
+        gpu_code = str(cfg.colab_gpu or "T4").upper()
+        gpu_idx = next((i for i in range(self.gpu_combo.count()) if self.gpu_combo.itemData(i) == gpu_code), 0)
+        self.gpu_combo.setCurrentIndex(gpu_idx)
+        self.high_mem_check.setChecked(bool(cfg.high_mem))
         self.llama_tag_edit.setText(cfg.llama_cpp_tag or "b12556")
         self.hf_token_edit.setText(cfg.hf_token)
         self.keepalive_spin.setValue(cfg.keep_alive_interval)
@@ -244,7 +259,8 @@ class SettingsDialog(QDialog):
         cfg.api_port = self.port_spin.value()
         raw_session = self.session_edit.text().strip() or "colab-llm-server"
         cfg.colab_session = re.sub(r"\s+", "-", raw_session)
-        cfg.colab_gpu = self.gpu_combo.currentText()
+        cfg.colab_gpu = self.gpu_combo.currentData() or "T4"
+        cfg.high_mem = self.high_mem_check.isChecked()
         cfg.llama_cpp_tag = self.llama_tag_edit.text().strip() or "b12556"
         cfg.hf_token = self.hf_token_edit.text().strip()
         cfg.keep_alive_interval = self.keepalive_spin.value()

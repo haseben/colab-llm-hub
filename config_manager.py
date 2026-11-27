@@ -35,6 +35,8 @@ GPU_VRAM_MAP: dict[str, float] = {
     "T4": 15.0,
     "L4": 22.5,
     "A100": 40.0,
+    "H100": 80.0,
+    "G4": 96.0,
     "CPU": 0.0,
 }
 
@@ -75,6 +77,7 @@ class AppConfig:
     dark_mode: bool = True
     language: str = "zh"
     llama_cpp_tag: str = "b12556"
+    high_mem: bool = False
 
     @property
     def api_base_url(self) -> str:
